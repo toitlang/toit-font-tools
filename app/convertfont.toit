@@ -20,7 +20,6 @@ main args:
   parsed := parser.parse args
   bold := parsed["bold"]
   verbose = parsed["verbose"]
-  print "Verbose = $verbose"
   copyright_file := parsed["copyright_file"]
   bdf_file := parsed.rest[0]
   font_name := parsed.rest[1]
