@@ -15,6 +15,7 @@ main args:
   parser := ArgumentParser
   parser.add_flag "bold"
   parser.add_flag "verbose"
+  parser.add_flag "doc_comments"
   parser.add_option "copyright_file"
   parser.describe_rest ["bdf_file_in", "font_name", "toit_file_out"]
   parsed := parser.parse args
@@ -24,7 +25,7 @@ main args:
   bdf_file := parsed.rest[0]
   font_name := parsed.rest[1]
   toit_file := parsed.rest[2]
-  font_reader := FontReader bdf_file font_name --bold=bold
+  font_reader := FontReader bdf_file font_name --bold=bold --doc_comments=parsed["doc_comments"]
   font_reader.parse
   font_reader.dump toit_file copyright_file
 
@@ -171,12 +172,13 @@ class FontReader:
   filename/string ::= ?
   font_name/string ::= ?
   bold/bool ::= ?
+  doc_comments/bool ::= ?
 
   blocks := ?
 
   static ICON_BLOCK_SIZE ::= 8
 
-  constructor .filename/string .font_name/string --.bold=false:
+  constructor .filename/string .font_name/string --.bold=false --.doc_comments=false:
     blocks = UNICODE_BLOCKS.map: Block it
     List.chunk_up 0xF_0000 0x11_0000 ICON_BLOCK_SIZE: | from to |
       blocks.add
@@ -295,8 +297,12 @@ class FontReader:
       dump_copyright_file copyright_file fd
     fd.write "\n"
     if comment_lines.size != 0:
+      if doc_comments:
+        fd.write "/**\n"
       comment_lines.do:
-        fd.write "// $it\n"
+        fd.write "$(doc_comments ? "" : "// ")$it\n"
+      if doc_comments:
+        fd.write "*/\n"
       fd.write "\n"
     fd.write "/// Bitmaps for the $font_name font\n"
     fd.write "\n"
