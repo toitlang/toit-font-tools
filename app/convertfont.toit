@@ -13,21 +13,21 @@ verbose/bool := false
 
 main args:
   parser := ArgumentParser
-  parser.add_flag "bold"
-  parser.add_flag "verbose"
-  parser.add_flag "doc_comments"
-  parser.add_option "copyright_file"
-  parser.describe_rest ["bdf_file_in", "font_name", "toit_file_out"]
+  parser.add-flag "bold"
+  parser.add-flag "verbose"
+  parser.add-flag "doc_comments"
+  parser.add-option "copyright_file"
+  parser.describe-rest ["bdf_file_in", "font_name", "toit_file_out"]
   parsed := parser.parse args
   bold := parsed["bold"]
   verbose = parsed["verbose"]
-  copyright_file := parsed["copyright_file"]
-  bdf_file := parsed.rest[0]
-  font_name := parsed.rest[1]
-  toit_file := parsed.rest[2]
-  font_reader := FontReader bdf_file font_name --bold=bold --doc_comments=parsed["doc_comments"]
-  font_reader.parse
-  font_reader.dump toit_file copyright_file
+  copyright-file := parsed["copyright_file"]
+  bdf-file := parsed.rest[0]
+  font-name := parsed.rest[1]
+  toit-file := parsed.rest[2]
+  font-reader := FontReader bdf-file font-name --bold=bold --doc-comments=parsed["doc_comments"]
+  font-reader.parse
+  font-reader.dump toit-file copyright-file
 
 COMPRESSING ::= true
 
@@ -50,81 +50,81 @@ class Char:
 
   constructor .width/int .bbox/BBox .bits .name:
 
-  bytes_per_line_ -> int:
+  bytes-per-line_ -> int:
     return (bbox.width + 7) >> 3
 
-  make_bold:
-    bytes_per_line := bytes_per_line_
+  make-bold:
+    bytes-per-line := bytes-per-line_
     // Smear out the pixels for artificial bold mode.
     if bbox.width & 7 != 0:
       smear_ bits bits 0 0 bits.size
     else:
-      new_bytes_per_line := bytes_per_line + 1
-      new_bits := ByteArray new_bytes_per_line * bbox.height
+      new-bytes-per-line := bytes-per-line + 1
+      new-bits := ByteArray new-bytes-per-line * bbox.height
       bbox.height.repeat: | y |
         smear_
           bits
-          new_bits
-          y * bytes_per_line
-          y * new_bytes_per_line
-          bytes_per_line
-      bits = new_bits
+          new-bits
+          y * bytes-per-line
+          y * new-bytes-per-line
+          bytes-per-line
+      bits = new-bits
     width++
     bbox.width++
 
-  smear_ in/ByteArray out/ByteArray in_from/int out_from/int count/int:
+  smear_ in/ByteArray out/ByteArray in-from/int out-from/int count/int:
     carry := false
     count.repeat:
-      t := in[in_from + it]
-      new_carry := (t & 1) != 0
+      t := in[in-from + it]
+      new-carry := (t & 1) != 0
       t |= t >> 1
       if carry: t |= 0x80
-      out[out_from + it] = t
-      carry = new_carry
+      out[out-from + it] = t
+      carry = new-carry
     if carry:
       // If this triggers a bounds check then that means the font
       // has bits that are black outside the bbox of the character,
       // which is a bug in the font.
-      out[out_from + count] |= 0x80
+      out[out-from + count] |= 0x80
 
 class UnicodeBlock:
   name/string ::= ?
   from/int ::= ?
   to/int ::= ?
   assigned/int ::= ?
-  wikipedia_name_/string ::= ?
-  right_to_left/bool ::= ?
+  wikipedia-name_/string ::= ?
+  right-to-left/bool ::= ?
   vertical/bool ::= ?
   abugida/bool ::= ?  // Syllable-based using diacritics for vowels.
   combining/bool ::= ?  // Accents that combine with other characters.
-  contains_icons/bool ::= ?
+  contains-icons/bool ::= ?
 
-  wikipedia_name -> string:
-    return wikipedia_name_
+  wikipedia-name -> string:
+    return wikipedia-name_
 
-  constructor .name/string .from/int .to/int --.assigned=(to + 1 - from) --disambiguate=(not name.contains " ") --wikipedia_name="" --.right_to_left=false --.vertical=false --.abugida=false --.combining=false --.contains_icons=false:
-    if wikipedia_name == "":
+  constructor .name/string .from/int .to/int --.assigned=(to + 1 - from) --disambiguate=(not name.contains " ") --wikipedia-name="" --.right-to-left=false --.vertical=false --.abugida=false --.combining=false --.contains-icons=false:
+    if wikipedia-name == "":
       bytes := ByteArray name.size:
         c := name[it]
         c == ' ' ? '_' : c
-      autogen_name := bytes.to_string
+      autogen-name := bytes.to-string
       if disambiguate:
-        wikipedia_name_ = "$(autogen_name)_%28Unicode_block%29"
+        wikipedia-name_ = "$(autogen-name)_%28Unicode_block%29"
       else:
-        wikipedia_name_ = autogen_name
+        wikipedia-name_ = autogen-name
     else:
-      wikipedia_name_ = wikipedia_name
+      wikipedia-name_ = wikipedia-name
 
 class Block:
-  unicode_block := ?
+  unicode-block := ?
   used := false
   chars := []
 
-  name: return unicode_block.name
-  from: return unicode_block.from
-  to: return unicode_block.to
+  name: return unicode-block.name
+  from: return unicode-block.from
+  to: return unicode-block.to
 
-  constructor .unicode_block/UnicodeBlock:
+  constructor .unicode-block/UnicodeBlock:
     chars = List
       to + 1 - from
       null
@@ -133,26 +133,26 @@ class Block:
     used = true
     chars[i - from] = c
 
-  make_bold:
-    do: | c | c.make_bold
+  make-bold:
+    do: | c | c.make-bold
 
   do [block]:
     (to + 1 - from).repeat: | j |
       c := chars[j]
       if c: block.call c from + j
 
-  all_caps_identifier -> string:
-    byte_count := 0
-    name_bytes := ByteArray name.size
+  all-caps-identifier -> string:
+    byte-count := 0
+    name-bytes := ByteArray name.size
     for i := 0; i < name.size; i++:
       byte := name.at --raw i
       if 'a' <= byte <= 'z':
-        name_bytes[byte_count++] = byte - 'a' + 'A'
+        name-bytes[byte-count++] = byte - 'a' + 'A'
       else if 'A' <= byte <= 'Z' or '0' <= byte <= '9':
-        name_bytes[byte_count++] = byte
+        name-bytes[byte-count++] = byte
       else if byte == ' ' or byte == '-' or byte == '_':
-        name_bytes[byte_count++] = '_'
-    return name_bytes.to_string 0 byte_count
+        name-bytes[byte-count++] = '_'
+    return name-bytes.to-string 0 byte-count
 
 class BBox:
   width := 0
@@ -170,68 +170,68 @@ class BBox:
 
 class FontReader:
   filename/string ::= ?
-  font_name/string ::= ?
+  font-name/string ::= ?
   bold/bool ::= ?
-  doc_comments/bool ::= ?
+  doc-comments/bool ::= ?
 
   blocks := ?
 
-  static ICON_BLOCK_SIZE ::= 8
+  static ICON-BLOCK-SIZE ::= 8
 
-  constructor .filename/string .font_name/string --.bold=false --.doc_comments=false:
-    blocks = UNICODE_BLOCKS.map: Block it
-    List.chunk_up 0xF_0000 0x11_0000 ICON_BLOCK_SIZE: | from to |
+  constructor .filename/string .font-name/string --.bold=false --.doc-comments=false:
+    blocks = UNICODE-BLOCKS.map: Block it
+    List.chunk-up 0xF_0000 0x11_0000 ICON-BLOCK-SIZE: | from to |
       blocks.add
         Block
           UnicodeBlock
             "Icon range $(%x from)-$(%x to - 1)_"
             from
             to - 1
-            --wikipedia_name="Material_Design"
-            --contains_icons
+            --wikipedia-name="Material_Design"
+            --contains-icons
     clear
 
   clear -> none:
     bits = []
-    char_name = ""
+    char-name = ""
     state = NOTHING
     encoding = null
     bbox = null
     width = null
 
   static NOTHING ::= 0
-  static IN_CHAR ::= 1
-  static IN_BITMAP ::= 2
-  static IGNORE_CHAR ::= 3
+  static IN-CHAR ::= 1
+  static IN-BITMAP ::= 2
+  static IGNORE-CHAR ::= 3
 
   state := NOTHING
   encoding := null
   bits := []
-  char_name := ""
+  char-name := ""
   copyright := ""
-  copyright_lines := []
-  comment_lines := []
+  copyright-lines := []
+  comment-lines := []
   bbox := null
   width := null
 
   parse -> none:
-    fd := file.Stream.for_read filename
+    fd := file.Stream.for-read filename
     reader := BufferedReader fd
 
-    current_block := null
-    block_index := 0
+    current-block := null
+    block-index := 0
 
-    old_state := ""
-    old_line := ""
+    old-state := ""
+    old-line := ""
 
-    while line := reader.read_line:
-      old_state = state
-      old_line = line
+    while line := reader.read-line:
+      old-state = state
+      old-line = line
       if state == NOTHING:
-        if line.starts_with "COPYRIGHT":
+        if line.starts-with "COPYRIGHT":
           c := line.size == 9 ? "" : (line.copy 10)
-          copyright_lines.add c
-          if line.starts_with "\"" and c.ends_with "\"":
+          copyright-lines.add c
+          if line.starts-with "\"" and c.ends-with "\"":
             c = c.copy 1 (c.size - 1)
           if copyright == "":
             copyright = c
@@ -239,39 +239,39 @@ class FontReader:
             if c == "":
               copyright = "$copyright\n"
             else:
-              if copyright.ends_with "\n":
+              if copyright.ends-with "\n":
                 copyright = "$copyright$c"
               else:
                 copyright = "$copyright $c"
-        else if line.starts_with "COMMENT":
+        else if line.starts-with "COMMENT":
           c := line.size == 7 ? "" : (line.copy 8)
-          comment_lines.add c
-        else if line.starts_with "STARTCHAR":
-          state = IN_CHAR
-          char_name = line.copy 10
-        else if line.starts_with "ENDFONT":
+          comment-lines.add c
+        else if line.starts-with "STARTCHAR":
+          state = IN-CHAR
+          char-name = line.copy 10
+        else if line.starts-with "ENDFONT":
           fd.close
           return
-      else if state == IN_CHAR:
-        if line.starts_with "ENCODING":
+      else if state == IN-CHAR:
+        if line.starts-with "ENCODING":
           encoding = int.parse (line.copy 9)
           if encoding < 32:
-            state = IGNORE_CHAR
-        else if line.starts_with "BITMAP":
+            state = IGNORE-CHAR
+        else if line.starts-with "BITMAP":
           assert: encoding != null
-          state = IN_BITMAP
-        else if line.starts_with "BBX":
+          state = IN-BITMAP
+        else if line.starts-with "BBX":
           bbox = BBox (line.copy 4)
-        else if line.starts_with "DWIDTH":
+        else if line.starts-with "DWIDTH":
           width = int.parse
-            line.copy 7 (line.index_of " " 7)
-      else if state == IN_BITMAP:
-        if line.starts_with "ENDCHAR":
+            line.copy 7 (line.index-of " " 7)
+      else if state == IN-BITMAP:
+        if line.starts-with "ENDCHAR":
           bytes := ByteArray bits.size: bits[it]
-          c := Char width bbox bytes char_name
-          while current_block == null or current_block.to < encoding:
-            current_block = blocks[block_index++]
-          current_block.set encoding c
+          c := Char width bbox bytes char-name
+          while current-block == null or current-block.to < encoding:
+            current-block = blocks[block-index++]
+          current-block.set encoding c
           clear
         else:
           while line.size >= 2:
@@ -279,113 +279,113 @@ class FontReader:
             line = line.copy 2
             b := int.parse hex --radix=16
             bits.add b
-      else if state == IGNORE_CHAR and line.starts_with "ENDCHAR":
+      else if state == IGNORE-CHAR and line.starts-with "ENDCHAR":
         state = NOTHING
 
-  dump_copyright_file copyright_file/string fd -> none:
-    license_text := file.read_content copyright_file
-    license_text.to_string.split "\n":
+  dump-copyright-file copyright-file/string fd -> none:
+    license-text := file.read-content copyright-file
+    license-text.to-string.split "\n":
       line := it.trim
       if line != "": line = " $line"
       fd.write "//$line\n"
 
-  dump out_filename copyright_file -> none:
-    fd := file.Stream.for_write out_filename
-    copyright_lines.do:
+  dump out-filename copyright-file -> none:
+    fd := file.Stream.for-write out-filename
+    copyright-lines.do:
       fd.write "// Copyright: $it\n"
-    if copyright_file:
-      dump_copyright_file copyright_file fd
+    if copyright-file:
+      dump-copyright-file copyright-file fd
     fd.write "\n"
-    if comment_lines.size != 0:
-      if doc_comments:
+    if comment-lines.size != 0:
+      if doc-comments:
         fd.write "/**\n"
-      comment_lines.do:
-        fd.write "$(doc_comments ? "" : "// ")$it\n"
-      if doc_comments:
+      comment-lines.do:
+        fd.write "$(doc-comments ? "" : "// ")$it\n"
+      if doc-comments:
         fd.write "*/\n"
       fd.write "\n"
-    fd.write "/// Bitmaps for the $font_name font\n"
+    fd.write "/// Bitmaps for the $font-name font\n"
     fd.write "\n"
-    short_filename := filename
-    slash := short_filename.index_of --last "/"
+    short-filename := filename
+    slash := short-filename.index-of --last "/"
     if slash != -1:
-      short_filename = filename.copy slash + 1
-    fd.write "// Autogenerated by convertfont.toit from the BDF file $short_filename\n"
+      short-filename = filename.copy slash + 1
+    fd.write "// Autogenerated by convertfont.toit from the BDF file $short-filename\n"
     if bold:
       fd.write "// This font was automatically made bold by smearing the pixels horizontally\n"
 
-    if (blocks.any: it.used and it.unicode_block.contains_icons):
+    if (blocks.any: it.used and it.unicode-block.contains-icons):
       fd.write "\n"
       fd.write "import font show Font\n"
       fd.write "import icons show Icon\n"
 
     blocks.do: | block |
       if block.used
-          and not block.unicode_block.abugida   // Exclude blocks that our font engine cannot support.
-          and not block.unicode_block.vertical
-          and not block.unicode_block.combining
-          and not block.unicode_block.right_to_left:
-        if bold: block.make_bold
-        counter := LengthCounter block font_name copyright
+          and not block.unicode-block.abugida   // Exclude blocks that our font engine cannot support.
+          and not block.unicode-block.vertical
+          and not block.unicode-block.combining
+          and not block.unicode-block.right-to-left:
+        if bold: block.make-bold
+        counter := LengthCounter block font-name copyright
         counter.dump
 
-        block_size := counter.length
+        block-size := counter.length
 
         fd.write "\n"
-        if not block.unicode_block.contains_icons:
-          write_block_intro_ fd block block_size
-        name_bytes := ByteArray block.name.size
-        name := block.all_caps_identifier
-        if block.unicode_block.contains_icons:
+        if not block.unicode-block.contains-icons:
+          write-block-intro_ fd block block-size
+        name-bytes := ByteArray block.name.size
+        name := block.all-caps-identifier
+        if block.unicode-block.contains-icons:
           fd.write "$(name) ::= Font.from_page_ #[\n"
         else:
           fd.write "$(name) ::= #[\n"
 
         (CArrayDumper block counter).dump fd
 
-        dump_char_names block fd
+        dump-char-names block fd
 
     fd.close
 
-  write_block_intro_ fd block/Block block_size/int -> none:
+  write-block-intro_ fd block/Block block-size/int -> none:
     fd.write "/**\n"
-    fd.write "The characters from the $block.name Unicode block in the $font_name font.\n"
-    fd.write "  (See https://en.wikipedia.org/wiki/$block.unicode_block.wikipedia_name )\n"
-    present_count := 0
-    block.do: present_count++
-    assigned := block.unicode_block.assigned
-    if present_count >= assigned:
+    fd.write "The characters from the $block.name Unicode block in the $font-name font.\n"
+    fd.write "  (See https://en.wikipedia.org/wiki/$block.unicode-block.wikipedia-name )\n"
+    present-count := 0
+    block.do: present-count++
+    assigned := block.unicode-block.assigned
+    if present-count >= assigned:
       fd.write "This block has $assigned assigned code points, and they are all\n"
       fd.write "  present in this font.\n"
     else:
-      list_them := present_count <= 14
-      snippet := present_count > assigned / 2 ? "and" : "but only"
-      is_are := present_count == 1 ? "is" : "are"
-      fd.write "This block has $assigned assigned code points, $snippet $present_count of\n"
-      fd.write "  them $is_are present in this font$(list_them ? ":" : ".")\n"
+      list-them := present-count <= 14
+      snippet := present-count > assigned / 2 ? "and" : "but only"
+      is-are := present-count == 1 ? "is" : "are"
+      fd.write "This block has $assigned assigned code points, $snippet $present-count of\n"
+      fd.write "  them $is-are present in this font$(list-them ? ":" : ".")\n"
       i := 0
-      if list_them:
-        block.do: | c code_point |
+      if list-them:
+        block.do: | c code-point |
           i++
-          ultimate := i == present_count
-          penultimate := i == present_count - 1
+          ultimate := i == present-count
+          penultimate := i == present-count - 1
           name := c.name
-          if not name or name == "" or name.starts_with "uni":
-            if COMMON_MISSING_CHAR_NAMES.contains code_point:
-              name = COMMON_MISSING_CHAR_NAMES[code_point]
+          if not name or name == "" or name.starts-with "uni":
+            if COMMON-MISSING-CHAR-NAMES.contains code-point:
+              name = COMMON-MISSING-CHAR-NAMES[code-point]
             else:
-              name = "0x$(%04x code_point)"
+              name = "0x$(%04x code-point)"
           comma := ultimate ? "." : ","
-          and_word := penultimate ? " and" : ""
-          fd.write "  $name$comma$and_word\n"
+          and-word := penultimate ? " and" : ""
+          fd.write "  $name$comma$and-word\n"
     fd.write "  This block contains characters in the range 0x$(%04x block.from)-0x$(%04x block.to).\n"
-    fd.write "  The bitmaps for this block in this font take up about $block_size bytes.\n"
+    fd.write "  The bitmaps for this block in this font take up about $block-size bytes.\n"
     fd.write "*/\n"
 
-  dump_char_names block/Block fd -> none:
-    if not block.unicode_block.contains_icons: return
+  dump-char-names block/Block fd -> none:
+    if not block.unicode-block.contains-icons: return
 
-    block_identifier := block.all_caps_identifier
+    block-identifier := block.all-caps-identifier
 
     fd.write "\n"
     block.do: | c/Char encoding/int |
@@ -393,16 +393,16 @@ class FontReader:
         // The Unicode standard requires that character names never include
         // non-ASCII, so we can do this without worrying about UTF-8.
         bytes := ByteArray c.name.size:
-          name_char := c.name[it]
-          if 'a' <= name_char <= 'z':
-            name_char += 'A' - 'a'
-          if (not 'A' <= name_char <= 'Z') and (not '0' <= name_char <= '9'):
-            name_char = '_'
-          name_char
-        character_name := bytes.to_string
-        if '0' <= character_name[0] <= '9':
-          character_name = "_$character_name"
-        fd.write "$character_name ::= Icon 0x$(%x encoding) $block_identifier\n"
+          name-char := c.name[it]
+          if 'a' <= name-char <= 'z':
+            name-char += 'A' - 'a'
+          if (not 'A' <= name-char <= 'Z') and (not '0' <= name-char <= '9'):
+            name-char = '_'
+          name-char
+        character-name := bytes.to-string
+        if '0' <= character-name[0] <= '9':
+          character-name = "_$character-name"
+        fd.write "$character-name ::= Icon 0x$(%x encoding) $block-identifier\n"
 
     fd.write "\n"
 
@@ -411,7 +411,7 @@ abstract class DumperWithChecksum extends Dumper:
     super block
     length = pass1.length
     checksum = pass1.checksum
-    font_name = pass1.font_name
+    font-name = pass1.font-name
     copyright = pass1.copyright
 
 class ListDumper extends DumperWithChecksum:
@@ -420,18 +420,18 @@ class ListDumper extends DumperWithChecksum:
   constructor block/Block pass1:
     super block pass1
 
-  output_byte byte/int -> none:
+  output-byte byte/int -> none:
     bytes.add byte
 
-  output_hex_byte byte/int -> none:
+  output-hex-byte byte/int -> none:
     bytes.add byte
 
-  output_char_constant byte/int -> none:
+  output-char-constant byte/int -> none:
     bytes.add byte
 
-  output_slash_slash_comment comment/string -> none:
+  output-slash-slash-comment comment/string -> none:
 
-  output_newline -> none:
+  output-newline -> none:
 
   terminate -> none:
     bytes.add 0xff
@@ -443,74 +443,74 @@ class CArrayDumper extends DumperWithChecksum:
     fd_ = fd
     dump
 
-  current_line := "  "
+  current-line := "  "
 
   constructor block/Block pass1:
     super block pass1
 
-  output_byte byte/int -> none:
-    current_line += "$(byte & 0xff),"
-    if verbose: current_line += " "
+  output-byte byte/int -> none:
+    current-line += "$(byte & 0xff),"
+    if verbose: current-line += " "
 
-  output_hex_byte byte/int -> none:
-    current_line += "0x$(%x byte & 0xff),"
-    if verbose: current_line += " "
+  output-hex-byte byte/int -> none:
+    current-line += "0x$(%x byte & 0xff),"
+    if verbose: current-line += " "
 
-  output_char_constant byte/int -> none:
+  output-char-constant byte/int -> none:
     if byte > 127: throw "Currently no support for UTF8 in font names"
     if 32 <= byte <= 126 and byte != '\\' and byte != '$' and byte != '\x27':
       // Printable and not dollar, single quote, or backslash.
-      current_line += "'$(string.from_rune byte)',"
+      current-line += "'$(string.from-rune byte)',"
     else:
-      current_line += "0x$(%02x byte & 0xff), "
-    if byte == '\n' or (byte == ' ' and current_line.size > 60):
-      output_newline
+      current-line += "0x$(%02x byte & 0xff), "
+    if byte == '\n' or (byte == ' ' and current-line.size > 60):
+      output-newline
 
-  output_slash_slash_comment comment/string -> none:
+  output-slash-slash-comment comment/string -> none:
     if verbose:
-      current_line += "// $comment"
-    fd_.write "$current_line\n"
-    current_line = "  "
+      current-line += "// $comment"
+    fd_.write "$current-line\n"
+    current-line = "  "
 
-  output_newline:
-    fd_.write "$(current_line.trim --right)\n"
-    current_line = "  "
+  output-newline:
+    fd_.write "$(current-line.trim --right)\n"
+    current-line = "  "
 
   terminate -> none:
-    fd_.write "$(current_line)0xff]\n"
+    fd_.write "$(current-line)0xff]\n"
 
 class LengthCounter extends Dumper:
   bytes := []
 
-  constructor block/Block font_name_argument/string copyright_argument/string:
+  constructor block/Block font-name-argument/string copyright-argument/string:
     super block
-    font_name = font_name_argument
-    copyright = copyright_argument
+    font-name = font-name-argument
+    copyright = copyright-argument
 
-  output_byte b/int -> none:
+  output-byte b/int -> none:
     bytes.add b
     length++
 
-  output_hex_byte b/int -> none:
+  output-hex-byte b/int -> none:
     bytes.add b
     length++
 
-  output_char_constant b/int -> none:
+  output-char-constant b/int -> none:
     bytes.add b
     length++
 
-  output_newline -> none:
+  output-newline -> none:
 
-  output_slash_slash_comment s/string -> none:
+  output-slash-slash-comment s/string -> none:
 
-  reset_checksum:
+  reset-checksum:
     bytes = []
 
   terminate -> none:
     bytes.add 0xff
     length++
-    byte_array := ByteArray bytes.size: bytes[it]
-    checksum = sha256 byte_array
+    byte-array := ByteArray bytes.size: bytes[it]
+    checksum = sha256 byte-array
 
 abstract class Dumper:
   constructor .block:
@@ -518,74 +518,74 @@ abstract class Dumper:
   block := ?
   length := 0
   checksum := ByteArray 32
-  font_name := ""
+  font-name := ""
   copyright := ""
-  pending_sames_ := 0
+  pending-sames_ := 0
 
-  abstract output_byte byte/int -> none
-  abstract output_hex_byte byte/int -> none
-  abstract output_char_constant byte/int -> none
-  abstract output_slash_slash_comment s/string -> none
-  abstract output_newline -> none
+  abstract output-byte byte/int -> none
+  abstract output-hex-byte byte/int -> none
+  abstract output-char-constant byte/int -> none
+  abstract output-slash-slash-comment s/string -> none
+  abstract output-newline -> none
   abstract terminate -> none
-  reset_checksum:
+  reset-checksum:
 
-  output_string key/int value/string -> none:
-    output_char_constant -key
+  output-string key/int value/string -> none:
+    output-char-constant -key
     value.do --runes: | rune |
       if rune == 0: throw "File format does not support strings with embedded nulls"
-      output_char_constant rune
-    output_byte 0
+      output-char-constant rune
+    output-byte 0
 
-  output_integer key/int value/int -> none:
-    output_byte key
-    output_hex_byte value & 0xff
-    output_hex_byte (value >> 8) & 0xff
-    output_hex_byte (value >> 16) & 0xff
+  output-integer key/int value/int -> none:
+    output-byte key
+    output-hex-byte value & 0xff
+    output-hex-byte (value >> 8) & 0xff
+    output-hex-byte (value >> 16) & 0xff
 
-  dump_cardinal value:
+  dump-cardinal value:
     if value < 0x80:
-      output_byte value
+      output-byte value
     else if value < 0x4000:
-      output_byte (value >> 8) | 0x80
-      output_byte value & 0xff
+      output-byte (value >> 8) | 0x80
+      output-byte value & 0xff
     else:
-      output_byte (value >> 16) | 0xc0
-      output_byte (value >> 8) & 0xff
-      output_byte value & 0xff
+      output-byte (value >> 16) | 0xc0
+      output-byte (value >> 8) & 0xff
+      output-byte value & 0xff
 
   dump -> none:
-    output_hex_byte 0x97
-    output_hex_byte 0xf0
-    output_hex_byte 0x17
-    output_hex_byte 0x70
-    output_slash_slash_comment "Magic number 0x7017f097."
+    output-hex-byte 0x97
+    output-hex-byte 0xf0
+    output-hex-byte 0x17
+    output-hex-byte 0x70
+    output-slash-slash-comment "Magic number 0x7017f097."
 
-    output_hex_byte length & 0xff
-    output_hex_byte (length >> 8) & 0xff
-    output_hex_byte (length >> 16) & 0xff
-    output_hex_byte (length >> 24) & 0xff
-    output_slash_slash_comment "Length $length."
+    output-hex-byte length & 0xff
+    output-hex-byte (length >> 8) & 0xff
+    output-hex-byte (length >> 16) & 0xff
+    output-hex-byte (length >> 24) & 0xff
+    output-slash-slash-comment "Length $length."
 
-    checksum.do: output_hex_byte it
-    output_slash_slash_comment "Sha256 checksum."
+    checksum.do: output-hex-byte it
+    output-slash-slash-comment "Sha256 checksum."
 
-    reset_checksum
+    reset-checksum
 
-    output_string 'n' font_name
-    output_slash_slash_comment "Font name \"$font_name\"."
+    output-string 'n' font-name
+    output-slash-slash-comment "Font name \"$font-name\"."
 
-    output_string 'c' copyright
-    output_slash_slash_comment "Copyright message"
+    output-string 'c' copyright
+    output-slash-slash-comment "Copyright message"
 
-    output_integer 'f' block.from
-    output_slash_slash_comment "Unicode range start 0x$(%06x block.from)."
+    output-integer 'f' block.from
+    output-slash-slash-comment "Unicode range start 0x$(%06x block.from)."
 
-    output_integer 't' block.to
-    output_slash_slash_comment "Unicode range end 0x$(%06x block.to)."
+    output-integer 't' block.to
+    output-slash-slash-comment "Unicode range end 0x$(%06x block.to)."
 
-    output_byte 0
-    output_newline
+    output-byte 0
+    output-newline
 
     (block.to + 1 - block.from).repeat: | j |
       c := block.chars[j]
@@ -595,206 +595,206 @@ abstract class Dumper:
           c.bbox.height = 0
           c.bits = ByteArray 0
         else:
-          crop_bbox c
-        output_byte c.width
-        output_byte c.bbox.width
-        output_byte c.bbox.height
-        output_byte c.bbox.xoffset
-        output_byte c.bbox.yoffset
-        output_slash_slash_comment "$(%04x encoding) $c.name"
+          crop-bbox c
+        output-byte c.width
+        output-byte c.bbox.width
+        output-byte c.bbox.height
+        output-byte c.bbox.xoffset
+        output-byte c.bbox.yoffset
+        output-slash-slash-comment "$(%04x encoding) $c.name"
         if not COMPRESSING:
-          dump_cardinal encoding
-          dump_cardinal c.bits.size
-          c.bits.do: output_byte it
+          dump-cardinal encoding
+          dump-cardinal c.bits.size
+          c.bits.do: output-byte it
         else:
-          command_bits := []  // Pairs of bits that are commands to draw the glyph.
-          emit_first_line c command_bits
-          bytes_per_line := c.bytes_per_line_
-          for k := bytes_per_line; k < c.bits.size; k += bytes_per_line:
-            bytes_per_line.repeat: | l |
+          command-bits := []  // Pairs of bits that are commands to draw the glyph.
+          emit-first-line c command-bits
+          bytes-per-line := c.bytes-per-line_
+          for k := bytes-per-line; k < c.bits.size; k += bytes-per-line:
+            bytes-per-line.repeat: | l |
               m := k + l
-              previous_byte ::= c.bits[m - bytes_per_line]
-              new_byte := c.bits[m]
-              emit_line command_bits previous_byte new_byte
-          flush_sames command_bits
-          dump_cardinal encoding
-          byte_count := ((command_bits.size + 3) >> 2)
-          dump_cardinal byte_count
-          dump_command_bits command_bits
-        output_newline
+              previous-byte ::= c.bits[m - bytes-per-line]
+              new-byte := c.bits[m]
+              emit-line command-bits previous-byte new-byte
+          flush-sames command-bits
+          dump-cardinal encoding
+          byte-count := ((command-bits.size + 3) >> 2)
+          dump-cardinal byte-count
+          dump-command-bits command-bits
+        output-newline
     terminate
 
   // Remove white space that is within the bounding box.  Good fonts don't have
   // this, but some hand-designed ones have.
-  crop_bbox c/Char -> none:
-    leading_blank_lines := 0
-    trailing_blank_lines := 0
-    bytes_per_line := c.bytes_per_line_
+  crop-bbox c/Char -> none:
+    leading-blank-lines := 0
+    trailing-blank-lines := 0
+    bytes-per-line := c.bytes-per-line_
     for x := 0; x < c.bits.size; x++:
       if c.bits[x] != 0:
-        leading_blank_lines = x / bytes_per_line
+        leading-blank-lines = x / bytes-per-line
         break
     for x := c.bits.size - 1; x >= 0; x--:
       if c.bits[x] != 0:
-        trailing_blank_lines = (c.bits.size - x - 1) / bytes_per_line
+        trailing-blank-lines = (c.bits.size - x - 1) / bytes-per-line
         break
-    if leading_blank_lines != 0 or trailing_blank_lines != 0:
+    if leading-blank-lines != 0 or trailing-blank-lines != 0:
       c.bits = c.bits.copy
-        leading_blank_lines * bytes_per_line
-        c.bits.size - trailing_blank_lines * bytes_per_line
-      c.bbox.height -= leading_blank_lines + trailing_blank_lines
-      c.bbox.yoffset += trailing_blank_lines
+        leading-blank-lines * bytes-per-line
+        c.bits.size - trailing-blank-lines * bytes-per-line
+      c.bbox.height -= leading-blank-lines + trailing-blank-lines
+      c.bbox.yoffset += trailing-blank-lines
 
-  dump_command_bits command_bits/List -> none:
-    for k := 0; k < command_bits.size; k += 4:
-      b := command_bits[k] << 6
-      b |= (k + 1 < command_bits.size) ? command_bits[k + 1] << 4 : 0
-      b |= (k + 2 < command_bits.size) ? command_bits[k + 2] << 2 : 0
-      b |= (k + 3 < command_bits.size) ? command_bits[k + 3] << 0 : 0
+  dump-command-bits command-bits/List -> none:
+    for k := 0; k < command-bits.size; k += 4:
+      b := command-bits[k] << 6
+      b |= (k + 1 < command-bits.size) ? command-bits[k + 1] << 4 : 0
+      b |= (k + 2 < command-bits.size) ? command-bits[k + 2] << 2 : 0
+      b |= (k + 3 < command-bits.size) ? command-bits[k + 3] << 0 : 0
       if verbose:
-        output_hex_byte b
+        output-hex-byte b
       else:
-        output_byte b
+        output-byte b
 
-  flush_sames command_bits -> none:
-    while pending_sames_ >= 10:
-      chunk := min pending_sames_ 25
-      pending_sames_ -= chunk
+  flush-sames command-bits -> none:
+    while pending-sames_ >= 10:
+      chunk := min pending-sames_ 25
+      pending-sames_ -= chunk
       chunk -= 10
-      command_bits.add PREFIX_2
-      command_bits.add PREFIX_2_3
-      command_bits.add SAME_10_25
-      command_bits.add chunk >> 2
-      command_bits.add chunk & 3
-    while pending_sames_ >= 4:
-      chunk := min pending_sames_ 7
-      pending_sames_ -= chunk
+      command-bits.add PREFIX-2
+      command-bits.add PREFIX-2-3
+      command-bits.add SAME-10-25
+      command-bits.add chunk >> 2
+      command-bits.add chunk & 3
+    while pending-sames_ >= 4:
+      chunk := min pending-sames_ 7
+      pending-sames_ -= chunk
       chunk -= 4
-      command_bits.add PREFIX_2
-      command_bits.add SAME_4_7
-      command_bits.add chunk
-    while pending_sames_ >= 1:
-      command_bits.add SAME_1
-      pending_sames_--
-    pending_sames_ = 0
+      command-bits.add PREFIX-2
+      command-bits.add SAME-4-7
+      command-bits.add chunk
+    while pending-sames_ >= 1:
+      command-bits.add SAME-1
+      pending-sames_--
+    pending-sames_ = 0
 
-  emit_first_line c/Char command_bits/List -> none:
+  emit-first-line c/Char command-bits/List -> none:
     if c.bits.size > 0:
-      bytes_per_line := c.bytes_per_line_
+      bytes-per-line := c.bytes-per-line_
       // The first line has an all-zeros implied preceeding line, so it
       // is emitted a little differently.
-      bytes_per_line.repeat: | k |
-        new_bits := c.bits[k]
-        if new_bits == 0:
-          pending_sames_++
+      bytes-per-line.repeat: | k |
+        new-bits := c.bits[k]
+        if new-bits == 0:
+          pending-sames_++
           continue.repeat
-        flush_sames command_bits
-        if new_bits == 0b1111_1111:
-          command_bits.add PREFIX_3
-          command_bits.add PREFIX_3_3
-          command_bits.add ONES
-        else if new_bits == 0x80:
-          command_bits.add PREFIX_2
-          command_bits.add PREFIX_2_3
-          command_bits.add HI_BIT
-        else if new_bits == 1:
-          command_bits.add PREFIX_2
-          command_bits.add PREFIX_2_3
-          command_bits.add LO_BIT
+        flush-sames command-bits
+        if new-bits == 0b1111_1111:
+          command-bits.add PREFIX-3
+          command-bits.add PREFIX-3-3
+          command-bits.add ONES
+        else if new-bits == 0x80:
+          command-bits.add PREFIX-2
+          command-bits.add PREFIX-2-3
+          command-bits.add HI-BIT
+        else if new-bits == 1:
+          command-bits.add PREFIX-2
+          command-bits.add PREFIX-2-3
+          command-bits.add LO-BIT
         else:
-          command_bits.add NEW
-          command_bits.add (new_bits >> 6) & 3
-          command_bits.add (new_bits >> 4) & 3
-          command_bits.add (new_bits >> 2) & 3
-          command_bits.add (new_bits >> 0) & 3
+          command-bits.add NEW
+          command-bits.add (new-bits >> 6) & 3
+          command-bits.add (new-bits >> 4) & 3
+          command-bits.add (new-bits >> 2) & 3
+          command-bits.add (new-bits >> 0) & 3
 
-  emit_line command_bits/List previous_byte/int new_byte/int -> none:
+  emit-line command-bits/List previous-byte/int new-byte/int -> none:
     // The following lines are encoded relative to the line above them.
-    left_shifted := (previous_byte << 1) & 0xff
-    right_shifted := (previous_byte >> 1) & 0xff
-    grow ::= previous_byte | left_shifted | right_shifted
-    shrink ::= left_shifted & right_shifted
-    left_grow ::= previous_byte | left_shifted
-    right_grow ::= previous_byte | right_shifted
-    left_shrink ::= previous_byte & right_shifted
-    right_shrink ::= previous_byte & left_shifted
-    if new_byte == previous_byte:
-      pending_sames_++
+    left-shifted := (previous-byte << 1) & 0xff
+    right-shifted := (previous-byte >> 1) & 0xff
+    grow ::= previous-byte | left-shifted | right-shifted
+    shrink ::= left-shifted & right-shifted
+    left-grow ::= previous-byte | left-shifted
+    right-grow ::= previous-byte | right-shifted
+    left-shrink ::= previous-byte & right-shifted
+    right-shrink ::= previous-byte & left-shifted
+    if new-byte == previous-byte:
+      pending-sames_++
       return
-    flush_sames command_bits
-    if new_byte == 0:
-      command_bits.add PREFIX_3
-      command_bits.add ZERO
-    else if new_byte == left_grow:
-      command_bits.add PREFIX_3
-      command_bits.add GROW_LEFT
-    else if new_byte == left_shifted:
-      command_bits.add PREFIX_3
-      command_bits.add LEFT
-    else if new_byte == right_shifted:
-      command_bits.add PREFIX_2
-      command_bits.add RIGHT
-    else if new_byte == right_grow:
-      command_bits.add PREFIX_2
-      command_bits.add GROW_RIGHT
-    else if new_byte == left_shrink:
-      command_bits.add PREFIX_3
-      command_bits.add PREFIX_3_3
-      command_bits.add SHRINK_LEFT
-    else if new_byte == right_shrink:
-      command_bits.add PREFIX_3
-      command_bits.add PREFIX_3_3
-      command_bits.add SHRINK_RIGHT
-    else if new_byte == 0b1111_1111:
-      command_bits.add PREFIX_3
-      command_bits.add PREFIX_3_3
-      command_bits.add ONES
-    else if new_byte == grow:
-      command_bits.add PREFIX_2
-      command_bits.add PREFIX_2_3
-      command_bits.add GROW
-    else if new_byte == shrink:
-      command_bits.add PREFIX_3
-      command_bits.add PREFIX_3_3
-      command_bits.add SHRINK
-    else if new_byte == 0x80:
-      command_bits.add PREFIX_2
-      command_bits.add PREFIX_2_3
-      command_bits.add HI_BIT
-    else if new_byte == 1:
-      command_bits.add PREFIX_2
-      command_bits.add PREFIX_2_3
-      command_bits.add LO_BIT
+    flush-sames command-bits
+    if new-byte == 0:
+      command-bits.add PREFIX-3
+      command-bits.add ZERO
+    else if new-byte == left-grow:
+      command-bits.add PREFIX-3
+      command-bits.add GROW-LEFT
+    else if new-byte == left-shifted:
+      command-bits.add PREFIX-3
+      command-bits.add LEFT
+    else if new-byte == right-shifted:
+      command-bits.add PREFIX-2
+      command-bits.add RIGHT
+    else if new-byte == right-grow:
+      command-bits.add PREFIX-2
+      command-bits.add GROW-RIGHT
+    else if new-byte == left-shrink:
+      command-bits.add PREFIX-3
+      command-bits.add PREFIX-3-3
+      command-bits.add SHRINK-LEFT
+    else if new-byte == right-shrink:
+      command-bits.add PREFIX-3
+      command-bits.add PREFIX-3-3
+      command-bits.add SHRINK-RIGHT
+    else if new-byte == 0b1111_1111:
+      command-bits.add PREFIX-3
+      command-bits.add PREFIX-3-3
+      command-bits.add ONES
+    else if new-byte == grow:
+      command-bits.add PREFIX-2
+      command-bits.add PREFIX-2-3
+      command-bits.add GROW
+    else if new-byte == shrink:
+      command-bits.add PREFIX-3
+      command-bits.add PREFIX-3-3
+      command-bits.add SHRINK
+    else if new-byte == 0x80:
+      command-bits.add PREFIX-2
+      command-bits.add PREFIX-2-3
+      command-bits.add HI-BIT
+    else if new-byte == 1:
+      command-bits.add PREFIX-2
+      command-bits.add PREFIX-2-3
+      command-bits.add LO-BIT
     else:
-      command_bits.add NEW
-      command_bits.add (new_byte >> 6) & 3
-      command_bits.add (new_byte >> 4) & 3
-      command_bits.add (new_byte >> 2) & 3
-      command_bits.add (new_byte >> 0) & 3
+      command-bits.add NEW
+      command-bits.add (new-byte >> 6) & 3
+      command-bits.add (new-byte >> 4) & 3
+      command-bits.add (new-byte >> 2) & 3
+      command-bits.add (new-byte >> 0) & 3
 
   static NEW ::= 0          // 00         One literal byte of new pixel data follows.
-  static SAME_1 ::= 1       // 01         Copy a byte directly from the line above.
-  static PREFIX_2 ::= 2     // 10         Prefix.
-  static SAME_4_7 ::= 0     // 10 00 xx     Copy 4-7 bytes.
-  static GROW_RIGHT ::= 1   // 10 01        Copy one byte.
+  static SAME-1 ::= 1       // 01         Copy a byte directly from the line above.
+  static PREFIX-2 ::= 2     // 10         Prefix.
+  static SAME-4-7 ::= 0     // 10 00 xx     Copy 4-7 bytes.
+  static GROW-RIGHT ::= 1   // 10 01        Copy one byte.
   static RIGHT ::= 2        // 10 10        Use the previous byte, shifted right one.
-  static PREFIX_2_3 ::= 3   // 10 11        Prefix.
-  static SAME_10_25 ::= 0   // 10 11 00 xx xx  Copy 10-25 bytes.
-  static LO_BIT ::= 1       // 10 11 01       0x01
-  static HI_BIT ::= 2       // 10 11 10       0x80
+  static PREFIX-2-3 ::= 3   // 10 11        Prefix.
+  static SAME-10-25 ::= 0   // 10 11 00 xx xx  Copy 10-25 bytes.
+  static LO-BIT ::= 1       // 10 11 01       0x01
+  static HI-BIT ::= 2       // 10 11 10       0x80
   static GROW ::= 3         // 10 11 11       Add one black pixel on each side
-  static PREFIX_3 ::= 3     // 11         Prefix.
+  static PREFIX-3 ::= 3     // 11         Prefix.
   static LEFT ::= 0         // 11 00        Use the previous byte, shifted left one.
-  static GROW_LEFT ::= 1    // 11 01        Add one black pixel on the left of each run.
+  static GROW-LEFT ::= 1    // 11 01        Add one black pixel on the left of each run.
   static ZERO ::= 2         // 11 10        Use all-zero bits for this byte.
-  static PREFIX_3_3 ::= 3   // 11 11        Prefix.
-  static SHRINK_LEFT ::= 0  // 11 11 00       Remove one black pixel on the left of each run.
-  static SHRINK_RIGHT ::= 1 // 11 11 01       Remove one black pixel on the right of each run.
+  static PREFIX-3-3 ::= 3   // 11 11        Prefix.
+  static SHRINK-LEFT ::= 0  // 11 11 00       Remove one black pixel on the left of each run.
+  static SHRINK-RIGHT ::= 1 // 11 11 01       Remove one black pixel on the right of each run.
   static SHRINK ::= 2       // 11 11 10       Remove one black pixel on each side.
   static ONES ::= 3         // 11 11 11       Use all-one bits for this byte.
 
-UNICODE_BLOCKS := [
-  UnicodeBlock "ASCII" 0x0000 0x007F --assigned=95 --wikipedia_name="Basic_Latin_(Unicode_block)",
+UNICODE-BLOCKS := [
+  UnicodeBlock "ASCII" 0x0000 0x007F --assigned=95 --wikipedia-name="Basic_Latin_(Unicode_block)",
   UnicodeBlock "Latin-1 Supplement" 0x0080 0x00FF --assigned=96 --disambiguate,
   UnicodeBlock "Latin Extended-A" 0x0100 0x017F,
   UnicodeBlock "Latin Extended-B" 0x0180 0x024F,
@@ -805,16 +805,16 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Cyrillic" 0x0400 0x04FF --disambiguate,
   UnicodeBlock "Cyrillic Supplement" 0x0500 0x052F,
   UnicodeBlock "Armenian" 0x0530 0x058F --assigned=91,
-  UnicodeBlock "Hebrew" 0x0590 0x05FF --assigned=88 --right_to_left,
-  UnicodeBlock "Arabic" 0x0600 0x06FF --assigned=255 --right_to_left,
-  UnicodeBlock "Syriac" 0x0700 0x074F --assigned=77 --right_to_left,
-  UnicodeBlock "Arabic Supplement" 0x0750 0x077F --right_to_left,
+  UnicodeBlock "Hebrew" 0x0590 0x05FF --assigned=88 --right-to-left,
+  UnicodeBlock "Arabic" 0x0600 0x06FF --assigned=255 --right-to-left,
+  UnicodeBlock "Syriac" 0x0700 0x074F --assigned=77 --right-to-left,
+  UnicodeBlock "Arabic Supplement" 0x0750 0x077F --right-to-left,
   UnicodeBlock "Thaana" 0x0780 0x07BF --assigned=50,
   UnicodeBlock "NKo" 0x07C0 0x07FF --assigned=62,
   UnicodeBlock "Samaritan" 0x0800 0x083F --assigned=61,
   UnicodeBlock "Mandaic" 0x0840 0x085F --assigned=29,
-  UnicodeBlock "Syriac Supplement" 0x0860 0x086F --assigned=11 --right_to_left,
-  UnicodeBlock "Arabic Extended-A" 0x08A0 0x08FF --assigned=84 --right_to_left,
+  UnicodeBlock "Syriac Supplement" 0x0860 0x086F --assigned=11 --right-to-left,
+  UnicodeBlock "Arabic Extended-A" 0x08A0 0x08FF --assigned=84 --right-to-left,
   UnicodeBlock "Devanagari" 0x0900 0x097F --abugida,
   UnicodeBlock "Bengali" 0x0980 0x09FF --abugida --assigned=96,
   UnicodeBlock "Gurmukhi" 0x0A00 0x0A7F --abugida --assigned=80,
@@ -881,7 +881,7 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Block Elements" 0x2580 0x259F,
   UnicodeBlock "Geometric Shapes" 0x25A0 0x25FF,
   UnicodeBlock "Miscellaneous Symbols" 0x2600 0x26FF,
-  UnicodeBlock "Dingbats" 0x2700 0x27BF --wikipedia_name="Dingbat#Unicode",
+  UnicodeBlock "Dingbats" 0x2700 0x27BF --wikipedia-name="Dingbat#Unicode",
   UnicodeBlock "Miscellaneous Mathematical Symbols-A" 0x27C0 0x27EF,
   UnicodeBlock "Supplemental Arrows-A" 0x27F0 0x27FF,
   UnicodeBlock "Braille Patterns" 0x2800 0x28FF,
@@ -898,7 +898,7 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Cyrillic Extended-A" 0x2DE0 0x2DFF,
   UnicodeBlock "Supplemental Punctuation" 0x2E00 0x2E7F --assigned=83,
   UnicodeBlock "CJK Radicals Supplement" 0x2E80 0x2EFF --assigned=115,
-  UnicodeBlock "Kangxi Radicals" 0x2F00 0x2FDF --assigned=214 --wikipedia_name="Kangxi_radical#Unicode",
+  UnicodeBlock "Kangxi Radicals" 0x2F00 0x2FDF --assigned=214 --wikipedia-name="Kangxi_radical#Unicode",
   UnicodeBlock "Ideographic Description Characters" 0x2FF0 0x2FFF --assigned=12 --disambiguate,
   UnicodeBlock "CJK Symbols and Punctuation" 0x3000 0x303F,
   UnicodeBlock "Hiragana" 0x3040 0x309F --assigned=93,
@@ -942,13 +942,13 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Meetei Mayek" 0xABC0 0xABFF --abugida --assigned=56 --disambiguate,
   UnicodeBlock "Hangul Syllables" 0xAC00 0xD7AF --assigned=11172,
   UnicodeBlock "Hangul Jamo Extended-B" 0xD7B0 0xD7FF --assigned=72,
-  UnicodeBlock "High Surrogates" 0xD800 0xDB7F --wikipedia_name="Universal_Character_Set_characters#Surrogates",
-  UnicodeBlock "High Private Use Surrogates" 0xDB80 0xDBFF --wikipedia_name="Universal_Character_Set_characters#Surrogates",
-  UnicodeBlock "Low Surrogates" 0xDC00 0xDFFF --wikipedia_name="Universal_Character_Set_characters#Surrogates",
+  UnicodeBlock "High Surrogates" 0xD800 0xDB7F --wikipedia-name="Universal_Character_Set_characters#Surrogates",
+  UnicodeBlock "High Private Use Surrogates" 0xDB80 0xDBFF --wikipedia-name="Universal_Character_Set_characters#Surrogates",
+  UnicodeBlock "Low Surrogates" 0xDC00 0xDFFF --wikipedia-name="Universal_Character_Set_characters#Surrogates",
   UnicodeBlock "Private Use Area" 0xE000 0xF8FF,
   UnicodeBlock "CJK Compatibility Ideographs" 0xF900 0xFAFF --assigned=472,
   UnicodeBlock "Alphabetic Presentation Forms" 0xFB00 0xFB4F --assigned=58,
-  UnicodeBlock "Arabic Presentation Forms-A" 0xFB50 0xFDFF --assigned=611 --right_to_left,
+  UnicodeBlock "Arabic Presentation Forms-A" 0xFB50 0xFDFF --assigned=611 --right-to-left,
   UnicodeBlock "Variation Selectors" 0xFE00 0xFE0F --disambiguate,
   UnicodeBlock "Vertical Forms" 0xFE10 0xFE1F --assigned=10,
   UnicodeBlock "Combining Half Marks" 0xFE20 0xFE2F --combining,
@@ -972,7 +972,7 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Gothic" 0x10330 0x1034F --assigned=27,
   UnicodeBlock "Old Permic" 0x10350 0x1037F --assigned=43 --disambiguate,
   UnicodeBlock "Ugaritic" 0x10380 0x1039F --assigned=31,
-  UnicodeBlock "Old Persian" 0x103A0 0x103DF --assigned=50 --disambiguate --right_to_left,
+  UnicodeBlock "Old Persian" 0x103A0 0x103DF --assigned=50 --disambiguate --right-to-left,
   UnicodeBlock "Deseret" 0x10400 0x1044F,
   UnicodeBlock "Shavian" 0x10450 0x1047F,
   UnicodeBlock "Osmanya" 0x10480 0x104AF --assigned=40,
@@ -982,28 +982,28 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Linear A" 0x10600 0x1077F --assigned=341 --disambiguate,
   UnicodeBlock "Cypriot Syllabary" 0x10800 0x1083F --assigned=55 --disambiguate,
   UnicodeBlock "Imperial Aramaic" 0x10840 0x1085F --assigned=31 --disambiguate,
-  UnicodeBlock "Palmyrene" 0x10860 0x1087F --right_to_left,
-  UnicodeBlock "Nabataean" 0x10880 0x108AF --assigned=40 --right_to_left,
-  UnicodeBlock "Hatran" 0x108E0 0x108FF --assigned=26 --right_to_left,
-  UnicodeBlock "Phoenician" 0x10900 0x1091F --assigned=29 --right_to_left,
-  UnicodeBlock "Lydian" 0x10920 0x1093F --assigned=27 --right_to_left,
+  UnicodeBlock "Palmyrene" 0x10860 0x1087F --right-to-left,
+  UnicodeBlock "Nabataean" 0x10880 0x108AF --assigned=40 --right-to-left,
+  UnicodeBlock "Hatran" 0x108E0 0x108FF --assigned=26 --right-to-left,
+  UnicodeBlock "Phoenician" 0x10900 0x1091F --assigned=29 --right-to-left,
+  UnicodeBlock "Lydian" 0x10920 0x1093F --assigned=27 --right-to-left,
   UnicodeBlock "Meroitic Hieroglyphs" 0x10980 0x1099F --disambiguate,
   UnicodeBlock "Meroitic Cursive" 0x109A0 0x109FF --assigned=90 --disambiguate,
-  UnicodeBlock "Kharoshthi" 0x10A00 0x10A5F --assigned=68 --right_to_left,
-  UnicodeBlock "Old South Arabian" 0x10A60 0x10A7F --right_to_left,
-  UnicodeBlock "Old North Arabian" 0x10A80 0x10A9F --right_to_left,
-  UnicodeBlock "Manichaean" 0x10AC0 0x10AFF --assigned=51 --right_to_left,
-  UnicodeBlock "Avestan" 0x10B00 0x10B3F --assigned=61 --right_to_left,
-  UnicodeBlock "Inscriptional Parthian" 0x10B40 0x10B5F --assigned=30 --disambiguate --right_to_left,
-  UnicodeBlock "Inscriptional Pahlavi" 0x10B60 0x10B7F --assigned=27 --disambiguate --right_to_left,
-  UnicodeBlock "Psalter Pahlavi" 0x10B80 0x10BAF --assigned=29 --disambiguate --right_to_left,
-  UnicodeBlock "Old Turkic" 0x10C00 0x10C4F --assigned=73 --disambiguate --right_to_left,
-  UnicodeBlock "Old Hungarian" 0x10C80 0x10CFF --assigned=108 --disambiguate --right_to_left,
-  UnicodeBlock "Hanifi Rohingya" 0x10D00 0x10D3F --assigned=50 --disambiguate --right_to_left,
+  UnicodeBlock "Kharoshthi" 0x10A00 0x10A5F --assigned=68 --right-to-left,
+  UnicodeBlock "Old South Arabian" 0x10A60 0x10A7F --right-to-left,
+  UnicodeBlock "Old North Arabian" 0x10A80 0x10A9F --right-to-left,
+  UnicodeBlock "Manichaean" 0x10AC0 0x10AFF --assigned=51 --right-to-left,
+  UnicodeBlock "Avestan" 0x10B00 0x10B3F --assigned=61 --right-to-left,
+  UnicodeBlock "Inscriptional Parthian" 0x10B40 0x10B5F --assigned=30 --disambiguate --right-to-left,
+  UnicodeBlock "Inscriptional Pahlavi" 0x10B60 0x10B7F --assigned=27 --disambiguate --right-to-left,
+  UnicodeBlock "Psalter Pahlavi" 0x10B80 0x10BAF --assigned=29 --disambiguate --right-to-left,
+  UnicodeBlock "Old Turkic" 0x10C00 0x10C4F --assigned=73 --disambiguate --right-to-left,
+  UnicodeBlock "Old Hungarian" 0x10C80 0x10CFF --assigned=108 --disambiguate --right-to-left,
+  UnicodeBlock "Hanifi Rohingya" 0x10D00 0x10D3F --assigned=50 --disambiguate --right-to-left,
   UnicodeBlock "Rumi Numeral Symbols" 0x10E60 0x10E7F --assigned=31,
-  UnicodeBlock "Yezidi" 0x10E80 0x10EBF --assigned=47 --right_to_left,
+  UnicodeBlock "Yezidi" 0x10E80 0x10EBF --assigned=47 --right-to-left,
   UnicodeBlock "Old Sogdian" 0x10F00 0x10F2F --assigned=40 --disambiguate,
-  UnicodeBlock "Sogdian" 0x10F30 0x10F6F --assigned=42 --right_to_left,
+  UnicodeBlock "Sogdian" 0x10F30 0x10F6F --assigned=42 --right-to-left,
   UnicodeBlock "Brahmi" 0x11000 0x1107F --assigned=109 --abugida,
   UnicodeBlock "Kaithi" 0x11080 0x110CF --assigned=67 --abugida,
   UnicodeBlock "Sora Sompeng" 0x110D0 0x110FF --assigned=35 --disambiguate,
@@ -1062,20 +1062,20 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Musical Symbols" 0x1D100 0x1D1FF --assigned=231 --disambiguate,
   UnicodeBlock "Ancient Greek Musical Notation" --assigned=70 0x1D200 0x1D24F,
   UnicodeBlock "Mayan Numerals" 0x1D2E0 0x1D2FF --assigned=20 --disambiguate,
-  UnicodeBlock "Tai Xuan Jing Symbols" 0x1D300 0x1D35F --assigned=87 --wikipedia_name="Taixuanjing",
+  UnicodeBlock "Tai Xuan Jing Symbols" 0x1D300 0x1D35F --assigned=87 --wikipedia-name="Taixuanjing",
   UnicodeBlock "Counting Rod Numerals" 0x1D360 0x1D37F --assigned=25 --disambiguate,
   UnicodeBlock "Mathematical Alphanumeric Symbols" 0x1D400 0x1D7FF --assigned=996,
   UnicodeBlock "Sutton SignWriting" 0x1D800 0x1DAAF --assigned=672 --disambiguate,
   UnicodeBlock "Glagolitic Supplement" 0x1E000 0x1E02F --assigned=38,
   UnicodeBlock "Nyiakeng Puachue Hmong" 0x1E100 0x1E14F --assigned=71 --disambiguate,
   UnicodeBlock "Mende Kikakui" 0x1E800 0x1E8DF --assigned=213 --disambiguate,
-  UnicodeBlock "Adlam" 0x1E900 0x1E95F --assigned=88 --right_to_left,
+  UnicodeBlock "Adlam" 0x1E900 0x1E95F --assigned=88 --right-to-left,
   UnicodeBlock "Indic Siyaq Numbers" 0x1EC70 0x1ECBF --assigned=68 --disambiguate,
   UnicodeBlock "Ottoman Siyaq Numbers" 0x1ED00 0x1ED4F --assigned=61 --disambiguate,
   UnicodeBlock "Arabic Mathematical Alphabetic Symbols" 0x1EE00 0x1EEFF --assigned=143,
   UnicodeBlock "Mahjong Tiles" 0x1F000 0x1F02F --assigned=44 --disambiguate,
   UnicodeBlock "Domino Tiles" 0x1F030 0x1F09F --assigned=100,
-  UnicodeBlock "Playing Cards" 0x1F0A0 0x1F0FF --assigned=82 --wikipedia_name="Playing_cards_in_Unicode",
+  UnicodeBlock "Playing Cards" 0x1F0A0 0x1F0FF --assigned=82 --wikipedia-name="Playing_cards_in_Unicode",
   UnicodeBlock "Enclosed Alphanumeric Supplement" 0x1F100 0x1F1FF --assigned=200,
   UnicodeBlock "Enclosed Ideographic Supplement" 0x1F200 0x1F2FF --assigned=64,
   UnicodeBlock "Miscellaneous Symbols and Pictographs" 0x1F300 0x1F5FF,
@@ -1098,7 +1098,7 @@ UNICODE_BLOCKS := [
   UnicodeBlock "Variation Selectors Supplement" 0xE0100 0xE01EF,
 ]
 
-COMMON_MISSING_CHAR_NAMES ::= {
+COMMON-MISSING-CHAR-NAMES ::= {
   0x259: "latin small letter schwa (ə)",
   0x2bc: "modifier letter apostrophe",
   0x2c9: "modifier letter macron",

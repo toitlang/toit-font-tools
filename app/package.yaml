@@ -2,3 +2,6 @@ dependencies:
   host:
     url: github.com/toitlang/pkg-host
     version: ^1.5.1
+environment:
+  # Alpha 94 added support for kebab identifiers.
+  sdk: ^2.0.0-alpha.74
