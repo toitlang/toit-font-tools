@@ -13,16 +13,34 @@ verbose/bool := false
 
 main args:
   root-cmd := cli.Command "convert"
+    --long-help="Convert a BDF font to a Toit font."
     --options=[
-        cli.Flag "bold" --short-name="b" --short-help="Make the font bold by smearing the pixels horizontally.",
-        cli.Flag "verbose" --short-name="v" --short-help="Produce a more verbose .toit file.",
-        cli.Flag "doc-comments" --short-name="d" --short-help="Use /** */ comments instead of // comments.",
-        cli.OptionString "copyright-file" --short-name="c" --short-help="File containing the copyright notice." --type="file",
+        cli.Flag "bold"
+            --short-name="b"
+            --short-help="Make the font bold by smearing the pixels horizontally.",
+        cli.Flag "verbose"
+            --short-name="v"
+            --short-help="Produce a more verbose .toit file.",
+        cli.Flag "doc-comments"
+            --short-name="d"
+            --short-help="Use /** */ comments instead of // comments.",
+        cli.Option "copyright-file"
+            --short-name="c"
+            --short-help="File containing the copyright notice."
+            --type="file",
         ]
     --rest=[
-        cli.OptionString "bdf-file-in" --short-help="The BDF file to read." --type="file" --required,
-        cli.OptionString "font-name" --short-help="The name of the font." --required,
-        cli.OptionString "toit-file-out" --short-help="The .toit file to write." --type="file" --required,
+        cli.Option "bdf-file-in"
+            --short-help="The BDF file to read."
+            --type="file"
+            --required,
+        cli.Option "font-name"
+            --short-help="The name of the font."
+            --required,
+        cli.Option "toit-file-out"
+            --short-help="The .toit file to write."
+            --type="file"
+            --required,
         ]
     --run= :: convert it
   root-cmd.run args
