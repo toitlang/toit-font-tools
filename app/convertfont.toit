@@ -7,25 +7,34 @@
 import crypto.sha256 show *
 import host.file
 import reader show BufferedReader
-import host.arguments show ArgumentParser
+import cli
 
 verbose/bool := false
 
 main args:
-  parser := ArgumentParser
-  parser.add-flag "bold"
-  parser.add-flag "verbose"
-  parser.add-flag "doc_comments"
-  parser.add-option "copyright_file"
-  parser.describe-rest ["bdf_file_in", "font_name", "toit_file_out"]
-  parsed := parser.parse args
+  root-cmd := cli.Command "convert"
+    --options=[
+        cli.Flag "bold" --short-name="b" --short-help="Make the font bold by smearing the pixels horizontally.",
+        cli.Flag "verbose" --short-name="v" --short-help="Produce a more verbose .toit file.",
+        cli.Flag "doc-comments" --short-name="d" --short-help="Use /** */ comments instead of // comments.",
+        cli.OptionString "copyright-file" --short-name="c" --short-help="File containing the copyright notice." --type="file",
+        ]
+    --rest=[
+        cli.OptionString "bdf-file-in" --short-help="The BDF file to read." --type="file" --required,
+        cli.OptionString "font-name" --short-help="The name of the font." --required,
+        cli.OptionString "toit-file-out" --short-help="The .toit file to write." --type="file" --required,
+        ]
+    --run= :: convert it
+  root-cmd.run args
+
+convert parsed/cli.Parsed:
   bold := parsed["bold"]
   verbose = parsed["verbose"]
   copyright-file := parsed["copyright_file"]
-  bdf-file := parsed.rest[0]
-  font-name := parsed.rest[1]
-  toit-file := parsed.rest[2]
-  font-reader := FontReader bdf-file font-name --bold=bold --doc-comments=parsed["doc_comments"]
+  bdf-file := parsed["bdf-file-in"]
+  font-name := parsed["font-name"]
+  toit-file := parsed["toit-file-out"]
+  font-reader := FontReader bdf-file font-name --bold=bold --doc-comments=parsed["doc-comments"]
   font-reader.parse
   font-reader.dump toit-file copyright-file
 
