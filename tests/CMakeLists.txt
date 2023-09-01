@@ -7,7 +7,7 @@ file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*_test.sh" "*_test_slow.sh
 # Add windows exe extension.
 set(TOIT_EXEC "toit.run${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to run the tests")
 set(TPKG_EXEC "toit.pkg${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to install the packages")
-set(TOIT_COMPILE "toit.compile${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to check the syntax")
+set(TCOMPILE_EXEC "toit.compile${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to check the syntax")
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
 set(SLOW_TEST_TIMEOUT 200 CACHE STRING "The maximal amount of time each slow test is allowed to run")
 
@@ -44,7 +44,7 @@ foreach(file ${TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/${file}" ${TOIT_EXEC} ${TOIT_COMPILE}
+    COMMAND "sh" "tests/${file}" ${TOIT_EXEC} ${TCOMPILE_EXEC}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 

@@ -27,14 +27,17 @@ jobs:
             TOIT_FILE=toit-linux.tar.gz
             echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
             echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
+            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile" >> $GITHUB_ENV
           elif [[ "$RUNNER_OS" = "macOS" ]]; then
             TOIT_FILE=toit-macos.tar.gz
             echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
             echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
+            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile" >> $GITHUB_ENV
           elif [[ "$RUNNER_OS" = "Windows" ]]; then
             TOIT_FILE=toit-windows.tar.gz
             echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run.exe" >> $GITHUB_ENV
             echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg.exe" >> $GITHUB_ENV
+            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile.exe" >> $GITHUB_ENV
           else
             echo "UNSUPPORTED RUNNER: $RUNNER_OS"
             exit 1
@@ -81,14 +84,9 @@ jobs:
 
       - name: Run cmake
         run: |
-          mkdir -p build
-          (cd build && cmake .. -G Ninja)
-
-      - name: Install packages
-        run: |
-          (cd build && ninja install-pkgs)
+          make rebuild-cmake
+          cmake "-DTOIT_EXEC=$TOIT_EXEC" "-DTCOMPILE_EXEC=$TCOMPILE_EXEC" "-DTPKG_EXEC=$TPKG_EXEC" build
 
       - name: Test
         run: |
-          (cd build && ninja check)
-
+          make test
