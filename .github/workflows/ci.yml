@@ -87,6 +87,10 @@ jobs:
           make rebuild-cmake
           cmake "-DTOIT_EXEC=$TOIT_EXEC" "-DTCOMPILE_EXEC=$TCOMPILE_EXEC" "-DTPKG_EXEC=$TPKG_EXEC" build
 
+      - name: Install packages
+        run: |
+          make install-pkgs
+
       - name: Test
         run: |
           make test
