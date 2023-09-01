@@ -11,7 +11,7 @@ build/CMakeCache.txt:
 install-pkgs: rebuild-cmake
 	(cd build && ninja install-pkgs)
 
-test: install-pkgs rebuild-cmake
+test: get-bdf install-pkgs rebuild-cmake
 	(cd build && ninja check)
 
 # We rebuild the cmake file all the time.
@@ -22,5 +22,9 @@ rebuild-cmake:
 	mkdir -p build
 	(cd build && cmake .. -G Ninja)
 
-.PHONY: all test rebuild-cmake install-pkgs
+get-bdf:
+	mkdir -p build/
+	(git -C build/toit-font-clock pull || git -C build clone https://github.com/toitware/toit-font-clock.git)
+
+.PHONY: all test rebuild-cmake install-pkgs get-bdf
 

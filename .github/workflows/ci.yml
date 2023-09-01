@@ -83,14 +83,17 @@ jobs:
           tar x -f *.tar.gz
 
       - name: Run cmake
+        shell: bash
         run: |
           make rebuild-cmake
           cmake "-DTOIT_EXEC=$TOIT_EXEC" "-DTCOMPILE_EXEC=$TCOMPILE_EXEC" "-DTPKG_EXEC=$TPKG_EXEC" build
 
       - name: Install packages
+        shell: bash
         run: |
           make install-pkgs
 
       - name: Test
+        shell: bash
         run: |
           make test
