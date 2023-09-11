@@ -178,7 +178,7 @@ class Block:
       else if 'A' <= byte <= 'Z' or '0' <= byte <= '9':
         name-bytes[byte-count++] = byte
       else if byte == ' ' or byte == '-' or byte == '_':
-        name-bytes[byte-count++] = '_'
+        name-bytes[byte-count++] = '-'
     return name-bytes.to-string 0 byte-count
 
 class BBox:
