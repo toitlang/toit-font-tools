@@ -2,7 +2,7 @@
 # Use of this source code is governed by a Zero-Clause BSD license that can
 # be found in the tests/TESTS_LICENSE file.
 
-file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*_test.sh" "*_test_slow.sh")
+file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*-test.sh" "*-test-slow.sh")
 
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
 set(SLOW_TEST_TIMEOUT 200 CACHE STRING "The maximal amount of time each slow test is allowed to run")
