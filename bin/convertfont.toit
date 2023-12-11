@@ -178,7 +178,10 @@ class Block:
       else if 'A' <= byte <= 'Z' or '0' <= byte <= '9':
         name-bytes[byte-count++] = byte
       else if byte == ' ' or byte == '-' or byte == '_':
-        name-bytes[byte-count++] = '-'
+        if i == name.size - 1:
+          name-bytes[byte-count++] = '_'
+        else:
+          name-bytes[byte-count++] = '-'
     return name-bytes.to-string 0 byte-count
 
 class BBox:
@@ -424,7 +427,7 @@ class FontReader:
           if 'a' <= name-char <= 'z':
             name-char += 'A' - 'a'
           if (not 'A' <= name-char <= 'Z') and (not '0' <= name-char <= '9'):
-            name-char = '_'
+            name-char = '-'
           name-char
         character-name := bytes.to-string
         if '0' <= character-name[0] <= '9':
