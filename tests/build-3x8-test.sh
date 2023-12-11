@@ -10,8 +10,8 @@ TOIT_COMPILE=$2
 
 pwd
 
-echo $TOIT_RUN app/convertfont.toit --doc-comments -- tests/3x8proportional.bdf "Digital Clock 3x8 proportional" build/3x8proportional.toit
-$TOIT_RUN app/convertfont.toit --doc-comments -- build/toit-font-clock/bdf/3x8proportional.bdf "Digital Clock 3x8 proportional" build/3x8proportional.toit
+echo $TOIT_RUN bin/convertfont.toit --doc-comments -- tests/3x8proportional.bdf "Digital Clock 3x8 proportional" build/3x8proportional.toit
+$TOIT_RUN bin/convertfont.toit --doc-comments -- build/toit-font-clock/bdf/3x8proportional.bdf "Digital Clock 3x8 proportional" build/3x8proportional.toit
 
 echo $TOIT_COMPILE -Werror --analyze build/3x8proportional.toit
 $TOIT_COMPILE -Werror --analyze build/3x8proportional.toit

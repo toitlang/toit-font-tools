@@ -12,6 +12,6 @@ set(TOITPKG "toit.pkg${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable 
 set(TOITC "toit.compile${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to check the syntax")
 
 enable_testing()
-add_subdirectory(app)
+add_subdirectory(bin)
 add_subdirectory(tests)
 
