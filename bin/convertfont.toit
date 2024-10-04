@@ -17,13 +17,16 @@ main args:
     --options=[
         cli.Flag "bold"
             --short-name="b"
-            --help="Make the font bold by smearing the pixels horizontally.",
+            --help="Make the font bold by smearing the pixels horizontally."
+            --default=false,
         cli.Flag "verbose"
             --short-name="v"
-            --help="Produce a more verbose .toit file.",
+            --help="Produce a more verbose .toit file."
+            --default=false,
         cli.Flag "doc-comments"
             --short-name="d"
-            --help="Use /** */ comments instead of // comments.",
+            --help="Use /** */ comments instead of // comments."
+            --default=false,
         cli.Option "copyright-file"
             --short-name="c"
             --help="File containing the copyright notice."
