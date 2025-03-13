@@ -316,7 +316,7 @@ class FontReader:
         state = NOTHING
 
   dump-copyright-file copyright-file/string writer/io.Writer -> none:
-    license-text := file.read-content copyright-file
+    license-text := file.read-contents copyright-file
     license-text.to-string.split "\n":
       line := it.trim
       if line != "": line = " $line"

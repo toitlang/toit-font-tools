@@ -3,7 +3,7 @@ environment:
 dependencies:
   cli:
     url: github.com/toitlang/pkg-cli
-    version: ^1.7.0
+    version: ^1.8.0
   host:
     url: github.com/toitlang/pkg-host
-    version: ^1.15.0
+    version: ^1.15.3
