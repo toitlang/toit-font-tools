@@ -7,9 +7,7 @@ cmake_minimum_required(VERSION 3.22)
 project(host NONE)
 
 # Add windows exe extension.
-set(TOITRUN "toit.run${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to run the tests")
-set(TOITPKG "toit.pkg${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to install the packages")
-set(TOITC "toit.compile${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The executable used to check the syntax")
+set(TOIT "toit${CMAKE_EXECUTABLE_SUFFIX}" CACHE FILEPATH "The 'toit' executable")
 
 enable_testing()
 add_subdirectory(bin)

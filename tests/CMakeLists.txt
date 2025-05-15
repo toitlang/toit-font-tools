@@ -33,7 +33,7 @@ foreach(file ${TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/${file}" ${TOITRUN} ${TOITC}
+    COMMAND "sh" "tests/${file}" ${TOIT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
